@@ -133,12 +133,21 @@ docker run --rm --env-file config.env automatic-youtube-downloader --dry-run
 
 Télécharger 1 morceau pour de vrai dans ton Drive :
 
+Mac / Linux :
+
 ```bash
-# Sous Git Bash (Windows), ajoute MSYS_NO_PATHCONV=1 devant la commande.
 docker run --rm --env-file config.env \
   -e STATE_URI=/data/state.json -e DRIVE_TOKEN_FILE=/data/token.json \
   -v "$(pwd):/data" automatic-youtube-downloader --limit 1
 ```
+
+Windows (PowerShell) :
+
+```powershell
+docker run --rm --env-file config.env -e STATE_URI=/data/state.json -e DRIVE_TOKEN_FILE=/data/token.json -v "${PWD}:/data" automatic-youtube-downloader --limit 1
+```
+
+Windows (Git Bash) : reprends la commande Mac / Linux en ajoutant `MSYS_NO_PATHCONV=1 ` devant.
 
 Pas de doublon à craindre plus tard : avant de télécharger un morceau, le script vérifie s'il est déjà dans le
 Drive.
