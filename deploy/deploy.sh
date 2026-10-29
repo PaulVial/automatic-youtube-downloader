@@ -76,8 +76,8 @@ gcloud services enable run.googleapis.com cloudscheduler.googleapis.com secretma
 
 info "Comptes de service"
 for sa in runner scheduler; do
-  gcloud iam service-accounts describe "${NAME}-${sa}@${PROJECT_ID}.iam.gserviceaccount.com" >/dev/null 2>&1 \
-    || gcloud iam service-accounts create "${NAME}-${sa}" --display-name="automatic-youtube-downloader ${sa}"
+  gcloud iam service-accounts describe "${SHORT}-${sa}@${PROJECT_ID}.iam.gserviceaccount.com" >/dev/null 2>&1 \
+    || gcloud iam service-accounts create "${SHORT}-${sa}" --display-name="${NAME} ${sa}"
 done
 
 # Cloud Build utilise le compte Compute par défaut : on s'assure qu'il peut construire et pousser l'image.
