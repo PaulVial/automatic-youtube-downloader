@@ -56,10 +56,11 @@ Cloud Run Job ── lit les playlists ──► YouTube
 3. *(Recommandé)* Crée une alerte de budget à 1 € : menu **Facturation → Budgets et alertes → Créer un budget**.
 4. Dans ton terminal :
    ```bash
-   gcloud auth login
-   gcloud config set project TON_PROJECT_ID
-   gcloud services enable drive.googleapis.com
+   gcloud auth login ton.adresse@gmail.com
+   gcloud services enable drive.googleapis.com --project=TON_PROJECT_ID --account=ton.adresse@gmail.com
    ```
+   Si tu as plusieurs comptes Google dans gcloud (perso et pro, par exemple), indique le bon dans
+   `GCLOUD_ACCOUNT` à l'étape 2. Le script de déploiement l'utilisera sans toucher à ta configuration gcloud.
 
 ### 2. Récupérer le code et le configurer
 

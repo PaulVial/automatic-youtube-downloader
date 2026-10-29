@@ -52,13 +52,20 @@ RUNNER_SA="${SHORT}-runner@${PROJECT_ID}.iam.gserviceaccount.com"
 SCHEDULER_SA="${SHORT}-scheduler@${PROJECT_ID}.iam.gserviceaccount.com"
 IMAGE="${REGION}-docker.pkg.dev/${PROJECT_ID}/${NAME}/${NAME}:$(date +%Y%m%d-%H%M%S)"
 
-gcloud config set project "$PROJECT_ID" >/dev/null
+# Compte et projet valables uniquement pour ce script : la config gcloud globale n'est pas modifiée.
+export CLOUDSDK_CORE_PROJECT="$PROJECT_ID"
+if [[ -n "${GCLOUD_ACCOUNT:-}" ]]; then
+  gcloud auth list --format='value(account)' 2>/dev/null | grep -qx "$GCLOUD_ACCOUNT" \
+    || die "$GCLOUD_ACCOUNT n'est pas connecté à gcloud. Lance d'abord : gcloud auth login $GCLOUD_ACCOUNT"
+  export CLOUDSDK_CORE_ACCOUNT="$GCLOUD_ACCOUNT"
+fi
 
 # --- Prérequis -------------------------------------------------------------------------------
 
-info "Vérification de la facturation"
-[[ "$(gcloud billing projects describe "$PROJECT_ID" --format='value(billingEnabled)')" == "True" ]] \
-  || die "Aucun compte de facturation lié au projet. Voir le README, étape 1."
+info "Compte $(gcloud config get-value account 2>/dev/null), projet $PROJECT_ID"
+BILLING_ENABLED="$(gcloud billing projects describe "$PROJECT_ID" --format='value(billingEnabled)')" \
+  || die "Ce compte n'a pas accès au projet $PROJECT_ID. Renseigne le bon compte dans GCLOUD_ACCOUNT (config.env)."
+[[ "$BILLING_ENABLED" == "True" ]] || die "Aucun compte de facturation lié au projet. Voir le README, étape 1."
 
 info "Activation des APIs (peut prendre une minute)"
 gcloud services enable run.googleapis.com cloudscheduler.googleapis.com secretmanager.googleapis.com \
