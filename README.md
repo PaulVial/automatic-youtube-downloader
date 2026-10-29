@@ -1,68 +1,68 @@
 # automatic-youtube-downloader
 
-Chaque jour, ce script regarde une ou plusieurs playlists YouTube, télécharge en **MP3 320 kbps** les morceaux
-qu'il n'a pas encore récupérés et les dépose dans un dossier de ton **Google Drive**.
+Every day, this script checks one or more YouTube playlists, downloads the tracks it hasn't fetched yet as
+**320 kbps MP3** files, and drops them into a folder in your **Google Drive**.
 
-- Fichiers nommés `Artiste - Titre.mp3`, sans les mentions du type « (Official Video) », mais en gardant
-  « (Extended Mix) », « (X Remix) », etc.
-- Tags ID3 (artiste, titre) et pochette carrée, lisibles par Rekordbox, Serato et Traktor.
-- Au premier lancement, il récupère toute la playlist. Ensuite, seulement les nouveautés.
-- Il tourne tout seul sur Google Cloud. Ton ordinateur n'a pas besoin d'être allumé.
+- Files are named `Artist - Title.mp3`. Clutter like "(Official Video)" is removed, while "(Extended Mix)",
+  "(X Remix)" and similar are kept.
+- ID3 tags (artist, title) and a square cover, readable by Rekordbox, Serato and Traktor.
+- The first run fetches the whole playlist. After that, only new additions.
+- It runs on its own on Google Cloud. Your computer doesn't need to be on.
 
-> Usage personnel uniquement. Télécharger depuis YouTube n'est pas autorisé par ses conditions d'utilisation :
-> à toi de voir ce que tu fais des fichiers, et soutiens les artistes (Bandcamp, Beatport…).
+> Personal use only. Downloading from YouTube is not allowed by its terms of service: what you do with the files
+> is up to you. Support the artists (Bandcamp, Beatport…).
 
-## Combien ça coûte ?
+## How much does it cost?
 
-**0 € en pratique** : tout reste dans le niveau gratuit de Google Cloud (un lancement par jour, quelques minutes).
-Google demande quand même une carte bancaire pour activer le projet. Mets une alerte de budget à 1 € (étape 1)
-et tu seras prévenu au moindre centime.
+**€0 in practice**: everything stays within the Google Cloud free tier (one run a day, a few minutes each).
+Google still asks for a credit card to activate the project. Set a €1 budget alert (step 1) and you'll be warned
+about any charge, however small.
 
-Seule limite : ton Google Drive gratuit fait 15 Go, soit environ 1 000 morceaux.
+The only limit: a free Google Drive has 15 GB, which is about 1,000 tracks.
 
-## Comment ça marche
+## How it works
 
 ```
-Cloud Scheduler (tous les jours)
+Cloud Scheduler (daily)
         │
         ▼
-Cloud Run Job ── lit les playlists ──► YouTube
-        │        télécharge + convertit en MP3
+Cloud Run Job ── reads the playlists ──► YouTube
+        │        downloads + converts to MP3
         │
-        ├── mémorise les morceaux déjà faits ──► Cloud Storage (state.json)
-        └── dépose les MP3 ───────────────────► Google Drive
+        ├── remembers tracks already done ──► Cloud Storage (state.json)
+        └── uploads the MP3s ───────────────► Google Drive
 ```
 
 ---
 
-## Installation (environ 30 min, une seule fois)
+## Setup (about 30 min, one time only)
 
-### Ce qu'il te faut
+### What you need
 
-- Un compte Google (Gmail suffit) et une carte bancaire.
-- **Python 3.10+**, pour l'étape 4 uniquement.
-- **Google Cloud CLI** (`gcloud`) : https://cloud.google.com/sdk/docs/install
-- Un terminal **bash** : Terminal sur Mac/Linux, **Git Bash** sur Windows.
+- A Google account (Gmail is fine) and a credit card.
+- **Python 3.10+**, for step 4 only.
+- **Google Cloud CLI** (`gcloud`): https://cloud.google.com/sdk/docs/install
+- A **bash** terminal: Terminal on Mac/Linux, **Git Bash** or WSL on Windows.
 
-> Pas envie d'installer gcloud ? Tu peux faire les étapes 5 et 6 dans
-> [Cloud Shell](https://shell.cloud.google.com), un terminal dans le navigateur où tout est déjà installé.
-> Il suffit d'y envoyer le dossier du projet avec ton `config.env` et ton `token.json`.
+> Don't want to install gcloud? You can do steps 5 and 6 in [Cloud Shell](https://shell.cloud.google.com), a
+> terminal in your browser with everything already installed. Just upload the project folder along with your
+> `config.env` and `token.json`.
 
-### 1. Créer le projet Google Cloud
+### 1. Create the Google Cloud project
 
-1. Va sur https://console.cloud.google.com/projectcreate et crée un projet, par exemple `dj-downloader`.
-   Note son **ID** (affiché sous le nom, par exemple `dj-downloader-123456`).
-2. Lie un compte de facturation : https://console.cloud.google.com/billing/linkedaccount
-3. *(Recommandé)* Crée une alerte de budget à 1 € : menu **Facturation → Budgets et alertes → Créer un budget**.
-4. Dans ton terminal :
+1. Go to https://console.cloud.google.com/projectcreate and create a project, for example `dj-downloader`.
+   Write down its **ID** (shown under the name, for example `dj-downloader-123456`).
+2. Link a billing account: https://console.cloud.google.com/billing/linkedaccount
+3. *(Recommended)* Create a €1 budget alert: **Billing → Budgets & alerts → Create budget**.
+4. In your terminal:
    ```bash
-   gcloud auth login ton.adresse@gmail.com
-   gcloud services enable drive.googleapis.com --project=TON_PROJECT_ID --account=ton.adresse@gmail.com
+   gcloud auth login your.address@gmail.com
+   gcloud services enable drive.googleapis.com --project=YOUR_PROJECT_ID --account=your.address@gmail.com
    ```
-   Si tu as plusieurs comptes Google dans gcloud (perso et pro, par exemple), indique le bon dans
-   `GCLOUD_ACCOUNT` à l'étape 2. Le script de déploiement l'utilisera sans toucher à ta configuration gcloud.
+   If you have several Google accounts in gcloud (personal and work, for example), put the right one in
+   `GCLOUD_ACCOUNT` in step 2. The deploy script will use it without changing your gcloud configuration.
 
-### 2. Récupérer le code et le configurer
+### 2. Get the code and configure it
 
 ```bash
 git clone https://github.com/PaulVial/automatic-youtube-downloader.git
@@ -70,71 +70,71 @@ cd automatic-youtube-downloader
 cp config.example.env config.env
 ```
 
-Ouvre `config.env` et remplis au minimum :
+Open `config.env` and fill in at least:
 
 ```
 PROJECT_ID=dj-downloader-123456
 PLAYLISTS=https://www.youtube.com/playlist?list=PLxxxx,https://www.youtube.com/playlist?list=PLyyyy
 ```
 
-Les playlists doivent être **publiques** ou **non répertoriées**. Les autres options (nom du dossier Drive, heure
-du lancement…) sont expliquées dans le fichier.
+Playlists must be **public** or **unlisted**. The other options (Drive folder name, run time…) are explained in
+the file.
 
-### 3. Autoriser l'accès à Google Drive
+### 3. Allow access to Google Drive
 
-Le script a besoin de ta permission pour déposer des fichiers dans ton Drive. On crée pour ça une « app OAuth »
-privée, qui ne sert qu'à toi.
+The script needs your permission to put files in your Drive. To do that, you create a private "OAuth app" that
+only you use.
 
-Dans la console, ouvre **Google Auth Platform** : https://console.cloud.google.com/auth/overview
+In the console, open **Google Auth Platform**: https://console.cloud.google.com/auth/overview
 
-1. **Commencer** : nom de l'app `automatic-youtube-downloader`, ton adresse e-mail. Type d'audience : **Externe**.
-2. **Branding** : Google exige ces champs pour passer en Production. Comme l'app n'utilise qu'une permission
-   « non sensible », il ne relit pas les pages : il faut juste qu'elles existent.
+1. **Get started**: app name `automatic-youtube-downloader`, your email address. Audience type: **External**.
+2. **Branding**: Google requires these fields before you can switch to Production. Since the app only uses a
+   "non-sensitive" permission, Google doesn't review the pages: they just need to exist.
 
-   | Champ | Valeur |
+   | Field | Value |
    |---|---|
-   | Page d'accueil de l'application | `https://github.com/PaulVial/automatic-youtube-downloader` |
-   | Règles de confidentialité | `https://github.com/PaulVial/automatic-youtube-downloader/blob/main/PRIVACY.md` |
-   | Domaines autorisés | `github.com` |
-   | Adresse e-mail d'assistance / du développeur | ton adresse e-mail |
+   | Application home page | `https://github.com/PaulVial/automatic-youtube-downloader` |
+   | Application privacy policy link | `https://github.com/PaulVial/automatic-youtube-downloader/blob/main/PRIVACY.md` |
+   | Authorized domains | `github.com` |
+   | User support email / Developer contact information | your email address |
 
-   Le repo GitHub doit être **public** pour que ces liens marchent. Si tu ne veux pas publier le code, colle le
-   contenu de [PRIVACY.md](PRIVACY.md) dans un [Gist public](https://gist.github.com) et utilise l'URL du Gist
-   pour les deux champs.
-3. **Audience** : clique sur **Publier l'application** pour la passer en **Production**.
-   ⚠️ Étape indispensable : en mode « Test », l'autorisation expire au bout de 7 jours et le script s'arrête.
-4. **Clients → Créer un client** : type **Application de bureau** (Desktop app), puis **Télécharger le JSON**.
-   Renomme le fichier en `client_secret.json` et place-le dans le dossier du projet.
+   The GitHub repo must be **public** for these links to work. If you'd rather not publish your copy of the code,
+   paste the content of [PRIVACY.md](PRIVACY.md) into a [public Gist](https://gist.github.com) and use the Gist
+   URL for both fields.
 
-### 4. Générer le token Drive
+3. **Audience**: click **Publish app** to switch it to **Production**.
+   ⚠️ Don't skip this: in "Testing" mode, the authorization expires after 7 days and the script stops working.
+4. **Clients → Create client**: type **Desktop app**, then **Download JSON**. Rename the file to
+   `client_secret.json` and put it in the project folder.
+
+### 4. Generate the Drive token
 
 ```bash
 pip install google-auth-oauthlib
 python scripts/get_drive_token.py client_secret.json
 ```
 
-Un navigateur s'ouvre : connecte-toi avec le compte Google **dont tu veux utiliser le Drive**. Si Google affiche
-« Application non validée », clique sur **Paramètres avancés → Accéder à automatic-youtube-downloader**. C'est normal, c'est
-ta propre app.
+A browser opens: sign in with the Google account **whose Drive you want to use**. If Google shows "Google hasn't
+verified this app", click **Advanced → Go to automatic-youtube-downloader**. That's expected: it's your own app.
 
-Le script crée `token.json`. **Ce fichier donne accès à ton Drive : ne le partage pas.**
+The script creates `token.json`. **This file gives access to your Drive: don't share it.**
 
-> L'app ne voit que les fichiers qu'elle a créés elle-même (permission `drive.file`) : elle n'a pas accès au reste
-> de ton Drive. C'est aussi pour ça que le dossier de destination est créé par le script, et qu'il ne peut pas
-> utiliser un dossier qui existe déjà.
+> The app only sees files it created itself (`drive.file` permission): it has no access to the rest of your
+> Drive. That's also why the destination folder is created by the script and can't be a folder that already
+> exists. Once it's created, you can move it anywhere in your Drive.
 
-### 5. *(Optionnel)* Tester sur ton ordinateur
+### 5. *(Optional)* Test on your computer
 
-Nécessite Docker. Voir ce qui serait téléchargé, sans rien télécharger :
+Requires Docker. See what would be downloaded, without downloading anything:
 
 ```bash
 docker build -t automatic-youtube-downloader .
 docker run --rm --env-file config.env automatic-youtube-downloader --dry-run
 ```
 
-Télécharger 1 morceau pour de vrai dans ton Drive :
+Download 1 track for real into your Drive:
 
-Mac / Linux :
+Mac / Linux:
 
 ```bash
 docker run --rm --env-file config.env \
@@ -142,85 +142,83 @@ docker run --rm --env-file config.env \
   -v "$(pwd):/data" automatic-youtube-downloader --limit 1
 ```
 
-Windows (PowerShell) :
+Windows (PowerShell):
 
 ```powershell
 docker run --rm --env-file config.env -e STATE_URI=/data/state.json -e DRIVE_TOKEN_FILE=/data/token.json -v "${PWD}:/data" automatic-youtube-downloader --limit 1
 ```
 
-Windows (Git Bash) : reprends la commande Mac / Linux en ajoutant `MSYS_NO_PATHCONV=1 ` devant.
+Windows (Git Bash): use the Mac / Linux command with `MSYS_NO_PATHCONV=1 ` in front of it.
 
-Pas de doublon à craindre plus tard : avant de télécharger un morceau, le script vérifie s'il est déjà dans le
-Drive.
+No risk of duplicates later: before downloading a track, the script checks whether it's already in the Drive.
 
-### 6. Déployer sur Google Cloud
+### 6. Deploy to Google Cloud
 
 ```bash
 bash deploy/deploy.sh
 ```
 
-Compte environ 5 minutes. Le script crée tout ce qu'il faut et peut être relancé sans risque.
+Takes about 5 minutes. The script creates everything it needs and is safe to run again.
 
-Lance ensuite un premier run tout de suite, sans attendre demain 6h :
+Then start a first run right away, instead of waiting for the next scheduled one:
 
 ```bash
 gcloud run jobs execute automatic-youtube-downloader --region=europe-west1
 ```
 
-Le premier run récupère toute la playlist : compte environ 20 secondes par morceau. Le dossier
-**DJ - YouTube** apparaît dans ton Drive.
+The first run fetches the whole playlist: expect about 20 seconds per track. The folder (**DJ - YouTube** by
+default) appears in your Drive.
 
 ---
 
-## Au quotidien
+## Day to day
 
-| Je veux… | Je fais… |
+| I want to… | I do… |
 |---|---|
-| Ajouter ou retirer une playlist | Je modifie `PLAYLISTS` dans `config.env`, puis `bash deploy/deploy.sh` |
-| Changer l'heure du lancement | Je modifie `SCHEDULE` dans `config.env`, puis `bash deploy/deploy.sh` |
-| Lancer un run maintenant | `gcloud run jobs execute automatic-youtube-downloader --region=europe-west1` |
-| Voir les logs | Console → **Cloud Run → Jobs → automatic-youtube-downloader → Exécutions** |
-| Mettre à jour yt-dlp (si YouTube casse quelque chose) | `bash deploy/deploy.sh` (l'image est reconstruite avec la dernière version) |
+| Add or remove a playlist | Edit `PLAYLISTS` in `config.env`, then `bash deploy/deploy.sh` |
+| Change the run time | Edit `SCHEDULE` in `config.env`, then `bash deploy/deploy.sh` |
+| Start a run now | `gcloud run jobs execute automatic-youtube-downloader --region=europe-west1` |
+| See the logs | Console → **Cloud Run → Jobs → automatic-youtube-downloader → Executions** |
+| Update yt-dlp (if YouTube breaks something) | `bash deploy/deploy.sh` (the image is rebuilt with the latest version) |
 
-Un morceau qui a déjà été téléchargé ne l'est plus jamais, même si tu le supprimes du Drive. Tu peux donc vider
-le dossier Drive au fur et à mesure que tu ranges les morceaux dans ta bibliothèque DJ.
+A track that has been downloaded is never downloaded again, even if you delete it from the Drive. So you can
+empty the Drive folder as you move tracks into your DJ library.
 
-## Dépannage
+## Troubleshooting
 
-**« Sign in to confirm you're not a bot » dans les logs**
-YouTube bloque parfois les serveurs de Google Cloud. Le run s'arrête proprement et reprendra le lendemain.
-Si ça dure, deux solutions :
+**"Sign in to confirm you're not a bot" in the logs**
+YouTube sometimes blocks Google Cloud servers. The run stops cleanly and resumes the next day. If it keeps
+happening, there are two fixes:
 
-1. **Cookies YouTube** (gratuit). Utilise de préférence un compte Google secondaire, que YouTube pourrait
-   signaler.
-   1. Ouvre une fenêtre de navigation privée et connecte-toi à YouTube.
-   2. Avec l'extension *Get cookies.txt LOCALLY*, exporte les cookies de youtube.com dans `cookies.txt`, à la
-      racine du projet.
-   3. Ferme la fenêtre privée, puis relance `bash deploy/deploy.sh`.
-2. **Proxy résidentiel** (payant, quelques € par Go, et un morceau fait environ 5 Mo) : renseigne `PROXY_URL`
-   dans `config.env`, puis relance `bash deploy/deploy.sh`.
+1. **YouTube cookies** (free). Preferably use a secondary Google account, since YouTube might flag it.
+   1. Open a private browsing window and sign in to YouTube.
+   2. With the *Get cookies.txt LOCALLY* extension, export the youtube.com cookies to `cookies.txt` at the root
+      of the project.
+   3. Close the private window, then run `bash deploy/deploy.sh` again.
+2. **Residential proxy** (paid, a few € per GB, and a track is about 5 MB): set `PROXY_URL` in `config.env`, then
+   run `bash deploy/deploy.sh` again.
 
-**« Token Google Drive refusé »**
-L'app OAuth est sans doute restée en mode « Test » (voir l'étape 3.3). Passe-la en Production, refais l'étape 4,
-puis relance `bash deploy/deploy.sh`.
+**"Token Google Drive refusé" (Drive token rejected)**
+The OAuth app most likely stayed in "Testing" mode (see step 3.3). Switch it to Production, redo step 4, then run
+`bash deploy/deploy.sh` again.
 
-**Un morceau a un mauvais nom**
-Le nom vient du titre YouTube. Renomme le fichier à la main dans le Drive, le script ne le retouchera pas.
+**A track has the wrong name**
+The name comes from the YouTube title. Rename the file by hand in the Drive: the script won't touch it again.
 
-**Un morceau échoue à chaque fois** (vidéo bloquée dans ton pays, supprimée…)
-Le script réessaie 3 jours de suite, puis abandonne ce morceau.
+**A track fails every time** (video blocked in your country, deleted…)
+The script retries on 3 consecutive days, then gives up on that track.
 
-## Organisation du code
+## Code layout
 
 ```
 automatic_youtube_downloader/
-  __main__.py   orchestration : lister, filtrer, télécharger, déposer
-  youtube.py    lecture des playlists et téléchargement (yt-dlp)
-  naming.py     « Artiste - Titre » à partir du titre YouTube
-  tagging.py    tags ID3 et pochette
-  storage.py    Google Drive, dossier local, fichier d'état
-scripts/get_drive_token.py   autorisation Google Drive (une seule fois)
-deploy/deploy.sh             déploiement Google Cloud
+  __main__.py   orchestration: list, filter, download, upload
+  youtube.py    playlist reading and downloading (yt-dlp)
+  naming.py     "Artist - Title" from the YouTube title
+  tagging.py    ID3 tags and cover
+  storage.py    Google Drive, local folder, state file
+scripts/get_drive_token.py   Google Drive authorization (one time only)
+deploy/deploy.sh             Google Cloud deployment
 ```
 
-Lancer les tests : `pip install pytest && pytest`
+Run the tests: `pip install pytest && pytest`
