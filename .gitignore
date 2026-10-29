@@ -1,0 +1,15 @@
+# Secrets : ne jamais commiter
+config.env
+token.json
+client_secret*.json
+cookies.txt
+
+# Données locales
+state.json
+data/
+out/
+
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/

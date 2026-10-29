@@ -1,0 +1,8 @@
+# yt-dlp volontairement non figé : YouTube change souvent, il faut la dernière version.
+# [default] inclut yt-dlp-ejs, nécessaire (avec Deno) pour YouTube.
+yt-dlp[default]>=2026.10.26
+google-api-python-client~=2.201
+google-auth~=2.62
+google-cloud-storage~=3.17
+mutagen~=1.48
+pillow~=13.0

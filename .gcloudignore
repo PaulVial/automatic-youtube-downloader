@@ -1,0 +1,8 @@
+# Fichiers envoyés à Cloud Build : uniquement ce qui sert à construire l'image.
+# Les secrets ne doivent jamais partir dans le build.
+*
+!Dockerfile
+!requirements.txt
+!automatic_youtube_downloader/
+!automatic_youtube_downloader/**
+automatic_youtube_downloader/__pycache__/

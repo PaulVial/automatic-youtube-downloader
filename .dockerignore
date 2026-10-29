@@ -1,0 +1,5 @@
+*
+!Dockerfile
+!requirements.txt
+!automatic_youtube_downloader/
+**/__pycache__
